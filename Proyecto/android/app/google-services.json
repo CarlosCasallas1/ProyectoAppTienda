@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "635920888654",
+    "project_id": "bdproyectot1",
+    "storage_bucket": "bdproyectot1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635920888654:android:4cd177cb5580bcc7c8241f",
+        "android_client_info": {
+          "package_name": "com.Tdea.BdProyectoT1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDiK-XnhrRj0qeqSbGT6cirlG3B4cPNJRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
