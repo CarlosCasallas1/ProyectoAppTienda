@@ -1,6 +1,6 @@
 // Importaciones de dependencias
 const express = require('express');
-const cors = require('cors');  // Mover cors a la parte superior
+const cors = require('cors');
 const db = require('./firebaseConfig'); // Importa Firestore desde firebaseconfig.js
 
 // Inicialización de la aplicación
@@ -14,15 +14,10 @@ app.use(cors()); // Habilita CORS para todas las rutas
 // Función de autenticación de usuario
 const authenticateUser = async (firstName, password) => {
   try {
-    // Consultar en la colección 'Profile' el documento donde el 'firstName' coincida
     const snapshot = await db.collection('Profile').where('firstName', '==', firstName).get();
-
-    // Si no se encuentra ningún documento, devolver mensaje de error
     if (snapshot.empty) {
       return { success: false, message: 'Usuario no encontrado.' };
     }
-
-    // Verificar la contraseña
     let userExists = false;
     snapshot.forEach(doc => {
       const userData = doc.data();
@@ -30,12 +25,9 @@ const authenticateUser = async (firstName, password) => {
         userExists = true;
       }
     });
-
-    // Retornar el resultado según si la contraseña es correcta o no
     return userExists
       ? { success: true, message: 'Inicio de sesión exitoso.' }
       : { success: false, message: 'Contraseña incorrecta.' };
-    
   } catch (error) {
     console.error('Error al autenticar el usuario: ', error);
     return { success: false, message: 'Error en el proceso de autenticación.' };
@@ -45,14 +37,49 @@ const authenticateUser = async (firstName, password) => {
 // Endpoint para autenticación de usuario
 app.post('/api/authenticate', async (req, res) => {
   const { firstName, password } = req.body;
-
-  // Validar que el formato de entrada sea el correcto
   if (typeof firstName !== 'string' || typeof password !== 'string') {
     return res.status(400).json({ success: false, message: 'Formato de entrada inválido.' });
   }
-
-  // Llamar a la función de autenticación y enviar el resultado como respuesta
   const result = await authenticateUser(firstName, password);
+  res.json(result);
+});
+
+// Función para agregar un perfil (registro de usuario)
+const addProfile = async (userData) => {
+  const profileData = {
+    firstName: userData.firstName,
+    lastName: userData.lastName || '',
+    email: userData.email,
+    birthDate: userData.birthDate,
+    password: userData.password,
+    department: userData.department,
+    city: userData.city,
+    address: userData.address
+  };
+
+  try {
+    const docRef = await db.collection('Profile').add(profileData);
+    console.log('Documento agregado con ID: ', docRef.id);
+    return { success: true, message: 'Usuario registrado exitosamente.' };
+  } catch (error) {
+    console.error('Error al agregar el documento: ', error);
+    return { success: false, message: 'Error al registrar el usuario.' };
+  }
+};
+
+// Endpoint para registrar un usuario
+app.post('/api/register', async (req, res) => {
+  const userData = req.body;
+
+  // Validar que se proporcionen los campos necesarios
+  if (!userData.firstName || !userData.email || !userData.password) {
+    return res.status(400).json({ success: false, message: 'Faltan datos obligatorios.' });
+  }
+
+  // Llama a addProfile para agregar el nuevo perfil
+  const result = await addProfile(userData);
+  
+  // Responde con el resultado
   res.json(result);
 });
 
