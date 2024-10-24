@@ -1,5 +1,5 @@
 {
-  "name": "Proyecto",
+    "name": "Proyecto",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -11,16 +11,13 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@react-native-firebase/app": "^21.0.0",
-    "@react-native-firebase/database": "^21.0.0",
-    "@react-native-firebase/firestore": "^21.0.0",
     "@react-native-picker/picker": "^2.8.1",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.4.1",
     "@ui-kitten/components": "^5.3.1",
     "expo-google-app-auth": "^10.0.0",
-    "firebase": "^10.13.0",
+    "firebase": "^10.14.1",
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-gesture-handler": "^2.18.1",

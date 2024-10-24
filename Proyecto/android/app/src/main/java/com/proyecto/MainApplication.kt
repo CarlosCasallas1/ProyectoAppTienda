@@ -1,4 +1,4 @@
-package com.proyecto
+package com.Tdea.BdProyectoT1
 
 import android.app.Application
 import com.facebook.react.PackageList
