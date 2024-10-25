@@ -1,3 +1,7 @@
+// src/backend/User/addProfile.js
+import { db } from '../../firebaseConfig'; // Ajusta la ruta según tu estructura de carpetas
+import { collection, addDoc } from 'firebase/firestore';
+
 const addProfile = async (userData) => {
   const profileData = {
     firstName: userData.firstName,
@@ -7,11 +11,11 @@ const addProfile = async (userData) => {
     password: userData.password,
     department: userData.department,
     city: userData.city,
-    address: userData.address
+    address: userData.address,
   };
 
   try {
-    const docRef = await db.collection('Profile').add(profileData); // No incluyas el campo 'id'
+    const docRef = await addDoc(collection(db, 'Profile'), profileData);
     console.log('Documento agregado con ID: ', docRef.id);
     return { success: true, message: 'Usuario registrado exitosamente.' };
   } catch (error) {
@@ -20,23 +24,4 @@ const addProfile = async (userData) => {
   }
 };
 
-
-
-// const addProfile = async () => {
-//     const profileData = {
-//       birthDate: "1985/05/15",
-//       city: "Medellín",
-//       department: "Antioquia",
-//       email: "Juan@gmail.com"
-//     };
-  
-//     try {
-//       const docRef = await db.collection('Profile').add(profileData);
-//       console.log('Documento agregado con ID: ', docRef.id);
-//     } catch (error) {
-//       console.error('Error al agregar el documento: ', error);
-//     }
-//   };
-  
-//   addProfile();
-  
+export default addProfile;

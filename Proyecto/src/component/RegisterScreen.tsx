@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, ImageBackground, Alert, FlatList, TouchableOpacity } from 'react-native';
 import { PaperProvider, Button, TextInput } from 'react-native-paper';
 import styles from '../styles/RegisterScreenStyles';
-import { Profiles, UserProfile } from '../../UI/Profile'; // Asegúrate de importar el arreglo Profiles y la interfaz UserProfile
+import RegisterService from '../services/RegisterService';
+import IRegisterCredentials from '../models/IRegisterCredentials';
 
-const cities: { [key in 'Antioquia' | 'Cundinamarca' | 'Valle del Cauca' | 'Atlántico']: string[] } = {
+const cities: Record<string, string[]> = {
   Antioquia: ['Medellín', 'Envigado', 'Itagüí', 'Bello', 'Rionegro'],
   Cundinamarca: ['Bogotá', 'Soacha', 'Chía', 'Zipaquirá', 'Facatativá'],
   'Valle del Cauca': ['Cali', 'Palmira', 'Buenaventura', 'Tuluá', 'Cartago'],
@@ -14,34 +15,36 @@ const cities: { [key in 'Antioquia' | 'Cundinamarca' | 'Valle del Cauca' | 'Atl�
 const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [user, setUser] = useState<string>('');
+  const [firstName, setFirstName] = useState<string>('');
   const [birthDate, setBirthDate] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [department, setDepartment] = useState<string>('');
   const [city, setCity] = useState<string>('');
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [cityDropdownVisible, setCityDropdownVisible] = useState(false);
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState<boolean>(false);
+  const [cityDropdownVisible, setCityDropdownVisible] = useState<boolean>(false);
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
+  
+  const registerService = new RegisterService(); // Instanciar el servicio
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const validateUser = (user: string) => {
-    return user.length <= 10;
+  const validateFirstName = (firstName: string): boolean => {
+    return firstName.length <= 10;
   };
 
-  const validatePassword = (password: string) => {
+  const validatePassword = (password: string): boolean => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
     return passwordRegex.test(password);
   };
 
-  const validateAddress = (address: string) => {
+  const validateAddress = (address: string): boolean => {
     return address.length <= 30;
   };
 
-  const validateBirthDate = (dateString: string) => {
+  const validateBirthDate = (dateString: string): boolean => {
     const birthDate = new Date(dateString);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
@@ -53,13 +56,13 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return true;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!validateEmail(email)) {
       Alert.alert('Error', 'Por favor, ingrese un correo electrónico válido.');
       return;
     }
 
-    if (!validateUser(user)) {
+    if (!validateFirstName(firstName)) {
       Alert.alert('Error', 'El nombre de usuario debe tener un máximo de 10 caracteres.');
       return;
     }
@@ -90,26 +93,24 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       return;
     }
 
-    // Generar un nuevo ID basado en la longitud del arreglo existente
-    const newId = Profiles.length + 1;
+    try {
+      const user: IRegisterCredentials = {
+        email,
+        password,
+        firstName,
+        birthDate,
+        address,
+        department,
+        city,
+      };
 
-    // Crear un nuevo perfil
-    const newProfile: UserProfile = {
-      id: newId,
-      firstName: user, // Aquí asumo que el 'usuario' es el nombre
-      lastName: '', // Puedes agregar un campo para el apellido si lo deseas
-      email,
-      birthDate,
-      profilePicture: 'https://img.freepik.com/vector-gratis/avatares-anonimos-circulos-grises_78370-2086.jpg', 
-      password,
-      department,
-      city,
-    };
+      await registerService.registerUser(user); // Llamada al servicio
 
-    // Agregar el nuevo perfil al arreglo Profiles
-    Profiles.push(newProfile);
-
-    setIsRegistered(true);
+      setIsRegistered(true);
+      Alert.alert('Registro Exitoso', 'Usuario registrado correctamente.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'No se pudo registrar el usuario.');
+    }
   };
 
   const departmentOptions = Object.keys(cities).map(dep => ({ label: dep, value: dep }));
@@ -136,7 +137,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {isRegistered ? (
               <View style={styles.successMessage}>
                 <Text style={styles.title}>¡Registro Exitoso!</Text>
-                <Text>Usuario: {user}</Text>
+                <Text>Usuario: {firstName}</Text>
                 <Text>Correo: {email}</Text>
                 <Text>Fecha de nacimiento: {birthDate}</Text>
                 <Text>Dirección: {address}</Text>
@@ -152,8 +153,8 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <Text style={styles.label}>Usuario:</Text>
                     <TextInput
                       style={styles.textInput}
-                      value={user}
-                      onChangeText={setUser}
+                      value={firstName}
+                      onChangeText={setFirstName}
                       placeholder="Nombre de usuario"
                       placeholderTextColor="#888"
                     />
@@ -176,7 +177,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       style={styles.textInput}
                       value={password}
                       onChangeText={setPassword}
-                      secureTextEntry={true}
+                      secureTextEntry
                       placeholder="Contraseña"
                       placeholderTextColor="#888"
                     />
@@ -188,7 +189,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       style={styles.textInput}
                       value={birthDate}
                       onChangeText={setBirthDate}
-                      placeholder="AAAA-MM-DD"
+                      placeholder="YYYY-MM-DD"
                       placeholderTextColor="#888"
                     />
                   </View>
@@ -201,70 +202,65 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       onChangeText={setAddress}
                       placeholder="Dirección"
                       placeholderTextColor="#888"
-                      maxLength={30} // Limitar a 30 caracteres
                     />
                   </View>
 
                   <View style={styles.inputContainer}>
                     <Text style={styles.label}>Departamento:</Text>
-                    <TouchableOpacity
-                      onPress={() => setDropdownVisible(!dropdownVisible)}
-                      style={styles.textInput}
-                    >
-                      <Text style={{ color: department ? 'black' : '#888', fontSize: 17 }}>
-                        {department || 'Seleccione'}
-                      </Text>
+                    <TouchableOpacity onPress={() => setDropdownVisible(!dropdownVisible)}>
+                      <TextInput
+                        style={styles.textInput}
+                        value={department}
+                        editable={false}
+                        placeholder="Seleccione un departamento"
+                        placeholderTextColor="#888"
+                      />
                     </TouchableOpacity>
-
                     {dropdownVisible && (
-                      <View style={styles.dropdownContainer}>
-                        <FlatList
-                          data={departmentOptions}
-                          keyExtractor={(item) => item.value}
-                          renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => selectDepartment(item.label)}>
-                              <Text style={styles.dropdownItem}>{item.label}</Text>
-                            </TouchableOpacity>
-                          )}
-                        />
-                      </View>
+                      <FlatList
+                        data={departmentOptions}
+                        keyExtractor={(item) => item.value}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity onPress={() => selectDepartment(item.value)}>
+                            <Text style={styles.dropdownItem}>{item.label}</Text>
+                          </TouchableOpacity>
+                        )}
+                      />
                     )}
                   </View>
 
                   <View style={styles.inputContainer}>
                     <Text style={styles.label}>Ciudad:</Text>
-                    <TouchableOpacity
-                      onPress={() => setCityDropdownVisible(!cityDropdownVisible)}
-                      style={styles.textInput}
-                    >
-                      <Text style={{ color: city ? 'black' : '#888', fontSize: 18 }}>
-                        {city || 'Seleccione'}
-                      </Text>
+                    <TouchableOpacity onPress={() => setCityDropdownVisible(!cityDropdownVisible)}>
+                      <TextInput
+                        style={styles.textInput}
+                        value={city}
+                        editable={false}
+                        placeholder="Seleccione una ciudad"
+                        placeholderTextColor="#888"
+                      />
                     </TouchableOpacity>
-
                     {cityDropdownVisible && (
-                      <View style={styles.dropdownContainer}>
-                        <FlatList
-                          data={availableCities}
-                          keyExtractor={(item) => item}
-                          renderItem={({ item }) => (
-                            <TouchableOpacity onPress={() => selectCity(item)}>
-                              <Text style={styles.dropdownItem}>{item}</Text>
-                            </TouchableOpacity>
-                          )}
-                        />
-                      </View>
+                      <FlatList
+                        data={availableCities}
+                        keyExtractor={(item) => item}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity onPress={() => selectCity(item)}>
+                            <Text style={styles.dropdownItem}>{item}</Text>
+                          </TouchableOpacity>
+                        )}
+                      />
                     )}
                   </View>
+                </View>
 
-                  <Button
+                <Button
                     mode="contained"
                     onPress={handleRegister}
                     style={styles.customBtn}
                   >
                     Registrarse
                   </Button>
-                </View>
               </>
             )}
           </View>
